@@ -164,14 +164,3 @@ document.addEventListener('DOMContentLoaded', function() {
   window.initializeData = initializeData;
   initializeData();
 });
-
-/*
-manifest.json에서 삭제한 부분
-  ,
-  "content_scripts": [
-     {
-      "matches": ["<all_urls>"],
-      "js": ["popup.js"]
-     }
-  ]
-*/
