@@ -8,12 +8,21 @@ document.addEventListener('DOMContentLoaded', function () {
     const searchResults = document.getElementById('searchResults');
     let loadedbookmarks = []; // 전역 변수로 bookmarks 선언
 
+    
+  
+      // 검색 버튼 클릭 이벤트
+    searchBtn.addEventListener('click', handleSearch);
+    searchInput.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter') {
+          handleSearch();
+      }
+  });
 
-    // 검색 버튼 클릭 이벤트
-    searchBtn.addEventListener('click', function () {
-        const query = searchInput.value.trim();
+
+    function handleSearch(){
+      const query = searchInput.value.trim();
         if (!query) {
-          alert('검색어를 입력하세요.');
+          //alert('검색어를 입력하세요.');
           displayAllBookmarks();      //빈 문자 입력 시 
           return;
         }
@@ -30,6 +39,22 @@ document.addEventListener('DOMContentLoaded', function () {
             console.error('검색 중 오류 발생:', error);
             alert('검색 중 문제가 발생했습니다. 다시 시도해주세요.');
         });
+
+    }
+
+    // 검색 버튼 클릭 이벤트
+    searchBtn.addEventListener('click', function () {
+        
+      });
+
+    // 검색 버튼 클릭 이벤트
+    searchBtn.addEventListener('click', function () {
+        
+      });
+
+    // 검색 버튼 클릭 이벤트
+    searchBtn.addEventListener('click', function () {
+        
       });
 
 
@@ -153,7 +178,9 @@ async function fetchThumbnailUrl(url) {
 // 북마크 리스트 아이템 생성 함수 수정
 async function createBookmarkListItem(bookmark) {
     const defaultThumbnail = "thumbnail-div-box-1-img0.png"; // 기본 이미지 경로
-    let thumbnailUrl = bookmark.thumbnailUrl ? bookmark.thumbnailUrl : await fetchThumbnailUrl(bookmark.url);    
+    //let thumbnailUrl = bookmark.thumbnailUrl ? bookmark.thumbnailUrl : await fetchThumbnailUrl(bookmark.url);    
+    let thumbnailUrl = bookmark.imageUrl ? bookmark.imageUrl : defaultThumbnail;    
+    
     const title = bookmark.title || bookmark.bookmarkName || "제목 없음";
 
     const thumbnailBox = document.createElement("div");
@@ -182,21 +209,51 @@ async function createBookmarkListItem(bookmark) {
     bookmark.tags.forEach((tag) => {
         const tagButton = document.createElement("button");
         tagButton.textContent = tag;
-        tagButton.style.backgroundColor = getRandomColor();
+        tagButton.style.backgroundColor = "#E8EDF2";
         tagButton.style.border = "none";
-        tagButton.style.color = "#fff";
+        tagButton.style.color = "#0D141C";
         tagButton.style.padding = "5px 10px";
         tagButton.style.margin = "3px";
         tagButton.style.borderRadius = "5px";
         tagButton.style.cursor = "pointer";
 
         // 태그 버튼 클릭 이벤트 
-        tagButton.addEventListener("click", function () 
-        { 
-          const filteredBookmarks = loadedbookmarks.filter(bookmark => bookmark.tags.includes(tag)); 
-          displayFilteredBookmarks(filteredBookmarks, tag); 
+        tagButton.addEventListener("click", function () {
+          const filteredBookmarks = loadedbookmarks.filter(bookmark =>
+              bookmark.tags.includes(tag)
+              
+          );
+          displayFilteredBookmarks(filteredBookmarks, tag);
+          console.log("필터링된 북마크:", filteredBookmarks);
+          // 클릭된 버튼만 색 변경
+          tagButton.style.backgroundColor = "#29DE2C";
+          tagButton.style.color = "#ffffff";
+      
+          // 다른 버튼 초기화
+          const otherButtons = tagBox.querySelectorAll("button");
+          otherButtons.forEach((button) => {
+              if (button !== tagButton) {
+                  button.style.backgroundColor = "#E8EDF2"; // 기본 색상 복구
+                  button.style.color = "#0D141C";          // 기본 글자 색 복구
+              }
+          });
+      });
+      
 
+                // Hover 효과 추가
+        tagButton.addEventListener("mouseover", () => {
+          tagButton.style.backgroundColor = "#29DE2C"; // hover 시 색상
+          tagButton.style.color = "#ffffff";         // hover 시 글자 색
+          tagButton.style.transform = "scale(1.05)"; // hover 시 크기
         });
+
+        tagButton.addEventListener("mouseout", () => {
+          tagButton.style.backgroundColor = "#E8EDF2"; // 원래 색상으로 복귀
+          tagButton.style.color = "#0D141C";          // 원래 글자 색으로 복귀
+          tagButton.style.transform = "scale(1)";     // 크기 복귀
+        });
+
+        
 
         tagBox.appendChild(tagButton);
     });
@@ -224,6 +281,20 @@ async function displayFilteredBookmarks(filteredBookmarks, tag) {
           console.error("Invalid Node returned from createBookmarkListItem:", listItem);
       }
   }
+
+  // 태그 버튼 색상 변경 
+  const tagButtons = document.querySelectorAll('.thumbnail-div-box-1-tagbox button'); 
+  tagButtons.forEach(button => { if (button.textContent === tag) 
+    { button.style.backgroundColor = '#29DE2C';
+       // 원하는 배경색으로 변경 
+       button.style.color = '#ffffff'; 
+       // 원하는 텍스트 색상으로 변경 
+       } else 
+       { button.style.backgroundColor =  "#E8EDF2"; 
+        // 기본 색상으로 변경 
+        button.style.color = "#0D141C"; 
+      } 
+      });
 }
 
 

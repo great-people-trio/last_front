@@ -4,9 +4,11 @@
 }
 .bookmark-check-div {
   background: #ffffff;
+  width: 518px;
   height: 713px;
   position: relative;
 }
+
 .thumnail-1-div {
   border-style: solid;
   border-color: #8c8c8c;
