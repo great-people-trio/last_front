@@ -34,6 +34,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
           console.log("생성할 북마크와 요소 출력", bookmark);
           openEditPage(bookmark, "save");
+          window.close(); // 팝업 창을 닫음
+
         })
         .catch((error) => {
           console.error("태그 생성 중 오류 발생:", error);
@@ -103,11 +105,33 @@ document.addEventListener("DOMContentLoaded", function () {
       const tagElement = document.createElement("button");
       tagElement.className = "tag";
       tagElement.textContent = tag;
-      tagElement.style.backgroundColor = colors[colorIndex];
-      tagElement.style.margin = "5px";
+      tagElement.style.backgroundColor = "#E8EDF2";
+      tagElement.style.border = "none";
+      tagElement.style.color = "#0D141C";
+      tagElement.style.padding = "5px 10px";
+      tagElement.style.margin = "3px";
+      tagElement.style.borderRadius = "5px";
+      tagElement.style.cursor = "pointer";
+
+
+
       tagElement.addEventListener("click", function () {
         filterBookmarksByTag(tag); // 태그 클릭 시 해당 북마크 필터링
       });
+
+      tagElement.addEventListener("mouseover", () => {
+        tagElement.style.backgroundColor = "#29DE2C"; // hover 시 색상
+        tagElement.style.color = "#ffffff";         // hover 시 글자 색
+        tagElement.style.transform = "scale(1.05)"; // hover 시 크기
+      });
+          
+
+      tagElement.addEventListener("mouseout", () => {
+        tagElement.style.backgroundColor = "#E8EDF2"; // 원래 색상으로 복귀
+        tagElement.style.color = "#0D141C";          // 원래 글자 색으로 복귀
+        tagElement.style.transform = "scale(1)";     // 크기 복귀
+      });
+
       tagContainer.appendChild(tagElement);
       colorIndex = (colorIndex + 1) % colors.length;
     });
@@ -118,8 +142,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const listItem = document.createElement("div");
     listItem.className = "bookmark-item";
     listItem.innerHTML = `
-      <button class="bookmark-title">${bookmark.title}</button>
-      <img class="bookmark-img" src="${bookmark.imageUrl}" alt="${bookmark.title}" />
+    <img class="bookmark-img" src="${bookmark.imageUrl}" alt="${bookmark.title}" />
+    <button class="bookmark-title">${bookmark.title}</button>
     `;
     bookmarkList.appendChild(listItem);
   }
