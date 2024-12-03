@@ -1,5 +1,33 @@
 import { openEditPage } from "./util_page.js";
 const userEmail = "test1@gmail.com";
+let query = "";
+
+const recBookmarks = [
+  {
+    email: "test1@gmail.com",       // 사용자의 이메일
+    imageUrl: "", // 이미지 URL
+    tags: ["", "", ""],     // 북마크의 태그
+    title: "",               // 북마크 제목
+    url: "",         // 북마크 URL
+    userName: "test1"            // 사용자의 이름
+  },
+  {
+    email: "test1@gmail.com",       // 사용자의 이메일
+    imageUrl: "", // 이미지 URL
+    tags: ["", "", ""],     // 북마크의 태그
+    title: "",               // 북마크 제목
+    url: "",         // 북마크 URL
+    userName: "test1"            // 사용자의 이름
+  },
+  {
+    email: "test1@gmail.com",       // 사용자의 이메일
+    imageUrl: "", // 이미지 URL
+    tags: ["", "", ""],     // 북마크의 태그
+    title: "",               // 북마크 제목
+    url: "",         // 북마크 URL
+    userName: "test1"            // 사용자의 이름
+  },
+];
 
 document.addEventListener('DOMContentLoaded', function () {
     const searchInput = document.getElementById('searchInput');
@@ -7,6 +35,10 @@ document.addEventListener('DOMContentLoaded', function () {
     //const goBackBtn = document.getElementById('goBackBtn');
     const searchResults = document.getElementById('searchResults');
     const searchSetting = document.getElementById('searchSetting');
+    const recResults = document.getElementById('recResults');
+    const recText = document.getElementById('recText');
+
+
 
     let loadedbookmarks = []; // 전역 변수로 bookmarks 선언
 
@@ -18,44 +50,205 @@ document.addEventListener('DOMContentLoaded', function () {
       if (event.key === 'Enter') {
           handleSearch();
       }
-  });
-
-  async function fetchRecommendedSites(searchQuery) {
-    const API_KEY = config.OPENAI_API_KEY; // OpenAI API Key
-    const endpoint = 'https://api.openai.com/v1/completions';
-    
-    const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${API_KEY}`
-        },
-        body: JSON.stringify({
-            model: 'text-davinci-003', // 적절한 모델 선택
-            prompt: `${searchQuery} 이 사이트랑 비슷한 사이트 3개를 추천해줘. Provide title and URL.`,
-            max_tokens: 100,
-            n: 1,
-            stop: null,
-            temperature: 0.7,
-        })
     });
 
-    async function handleSearch(searchQuery) {
-      // 북마크 검색 로직
-      const bookmarks = await fetchBookmarks(searchQuery);
+    
+async function fetchRecommendedSites(query) {
   
-      // GPT 추천 사이트 가져오기
-      const recommendedSites = await fetchRecommendedSites(searchQuery);
+  const API_KEY = config.OPENAI_API_KEY; // OpenAI API Key
+  const apiUrl = 'https://api.openai.com/v1/chat/completions';  // chat/completions 엔드포인트 사용
   
-      // 결과를 화면에 표시
-      renderResults(bookmarks, recommendedSites);
-      }
-    const data = await response.json();
-    return data.choices[0].text.split('\n').filter(Boolean); // 결과를 배열로 분리
-    }
+  const prompt = `${query} 이 사이트랑 비슷한 사이트 3개를 추천해줘. Provide title and url.
+  양식은 다음과 같아. title: "", url: "",
+  `;
+  
+  const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${API_KEY}`
+      },
+      body: JSON.stringify({
+          model: 'gpt-3.5-turbo',  // 적절한 모델 선택
+          messages: [
+              {
+                  role: 'system',
+                  content: "You are an assistant that recommends similar websites based on the given search query."
+              },
+              {
+                  role: 'user',
+                  content: prompt
+              }
+          ],
+          max_tokens: 150,  // 추천 사이트와 제목, URL을 포함할 충분한 토큰 수
+          temperature: 0.7
+      })
+  });
+
+  const data = await response.json();
+  console.log("추천 사이트",data)
+
+   
+  // API 응답에서 추천된 사이트 정보 추출
+  const recommendedSitesText = data.choices[0].message.content.trim();
+  console.log("Recommended Sites Text:", recommendedSitesText); // API에서 반환된 데이터 확인
+
+
+  // '\n'을 기준으로 각 사이트 데이터를 나누고, 'title'과 'url'을 추출
+  const recommendedSites = recommendedSitesText.split("\n").map(siteInfo => {
+    // 정규 표현식 수정: '1. title: 제목, url: URL' 형식에 맞게 수정
+    const match = siteInfo.match(/title:\s(.*?),\surl:\s(https?:\/\/[^\s]+)/);
+    console.log("Matching Result:", match); // 정규 표현식 매칭 확인
+    return match ? { title: match[1], url: match[2] } : null;
+  }).filter(site => site !== null);
+
+  console.log("추천 사이트",recommendedSites)
+
+
+  // recBookmarks 배열에 title과 url을 추가
+  const recBookmarks = recommendedSites.map((site, index) => ({
+    email: "test1@gmail.com",       // 사용자의 이메일
+    imageUrl: "",                   // 이미지 URL
+    tags: ["", "", ""],             // 북마크의 태그
+    title: site.title,              // 북마크 제목
+    url: site.url,                  // 북마크 URL
+    userName: "test1"               // 사용자의 이름
+  }));
+  console.log("추천 사이트",recBookmarks[0])
+
+
+
+  // recommendedSites.forEach(async site => {
+  //   const recBookmarksItem = document.createElement('div');
+  //   let thumbnailUrl = await fetchThumbnailUrl(site.url);
+  //   recBookmarksItem.className = 'rec-bookmarks-item';
+  //   recBookmarksItem.style.cssText = `
+  //     padding: 0px 0px 12px 0px;
+  //     display: flex;
+  //     flex-direction: column;
+  //     gap: 12px;
+  //     align-items: flex-start;
+  //     justify-content: flex-start;
+  //     align-self: stretch;
+  //     flex-shrink: 0;
+  //     width: 222px;
+  //     position: relative;
+  //   `;
+
+  //   recBookmarksItem.innerHTML = `
+  //       <a href="${site.url}" target="_blank">
+  //       <img
+  //       href="${site.url}"
+  //       class="thumbnail-div-box-1-img"
+  //       src="${thumbnailUrl}" 
+  //       alt="${site.title} 이미지"
+  //       />
+  //       <div 
+  //       class="thumbnail-div-box-1-inbox"
+  //       stlye=" justify-content: center;"
+  //       >
+  //       <div class="thumbnail-div-box-1-inbox-title">
+  //           <div>${site.title}</div>
+  //       </div>
+  //       <div 
+  //       class="thumbnail-div-box-1-inbox-url">
+  //           <div
+  //           >${site.url}</div>
+  //       </div>
+  //       </div>
+  //       </a>
+  //       <div class="thumbnail-div-box-1-tagbox"></div>
+  //   `;
+
+    
+  //   // 비동기적으로 fetch가 끝난 후에 DOM에 추가
+  //   recResults.appendChild(recBookmarksItem);
+  // });
+// 추천 사이트 배열을 비동기적으로 처리
+
+recText.style.cssText = `
+      width: 222px;
+            display: flex;
+
+font-size: 18px; /* 폰트 크기 */
+font-weight: bold; /* 볼드체 */
+display: flex; /* Flexbox */
+align-items: center; /* Flexbox 중앙 정렬 (수직) */
+justify-content: center; /* Flexbox 중앙 정렬 (수평) */
+margin-bottom:20px;
+">
+`;
+recText.innerHTML = `
+AI 추천 사이트
+`
+;
+
+for (let i = 0; i < 3; i++) {
+  
+  const site = recommendedSites[i];
+
+  const recBookmarksItem = document.createElement('div');
+  // recBookmarksItem.innerHTML="";
+  
+  // 비동기적으로 썸네일 URL을 가져옴
+  let thumbnailUrl = await fetchThumbnailUrl(site.url);
+  // let thumbnailUrl="";
+  // 아이템의 스타일을 설정
+  recBookmarksItem.className = 'rec-bookmarks-item';
+  recBookmarksItem.style.cssText = `
+      padding: 0px 0px 12px 0px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: flex-start;
+      justify-content: flex-start;
+      align-self: stretch;
+      flex-shrink: 0;
+      width: 222px;
+      position: relative;
+      font-size: 18px; /* 폰트 크기 */
+      font-weight: bold; /* 볼드체 */
+      display: flex; /* Flexbox */
+      align-items: center; /* Flexbox 중앙 정렬 (수직) */
+      justify-content: center; /* Flexbox 중앙 정렬 (수평) */
+      margin-bottom:20px;
+      ">
+  `;
+
+  // HTML 내용 설정
+  recBookmarksItem.innerHTML = `
+      <a href="${site.url}" target="_blank">
+          <img
+              class="thumbnail-div-box-1-img"
+              src="${thumbnailUrl}" 
+              alt="${site.title} 이미지"
+          />
+          <div class="thumbnail-div-box-1-inbox" style="justify-content: center;">
+              <div class="thumbnail-div-box-1-inbox-title">
+                  <div>${site.title}</div>
+              </div>
+              <div class="thumbnail-div-box-1-inbox-url">
+                  <div>${site.url}</div>
+              </div>
+          </div>
+      </a>
+      <div class="thumbnail-div-box-1-tagbox"></div>
+  `;
+  
+  // 비동기적으로 fetch가 끝난 후에 DOM에 추가
+  recResults.appendChild(recBookmarksItem);
+
+  console.log("한번 돔",i)
+}
+
+
+  return recBookmarks;
+}
+
+
 
     function handleSearch(){
-      const query = searchInput.value.trim();
+      query = searchInput.value.trim();
         if (!query) {
           //alert('검색어를 입력하세요.');
           displayAllBookmarks();      //빈 문자 입력 시 
@@ -181,33 +374,83 @@ function getRandomColor() {
   return colors[Math.floor(Math.random() * colors.length)];
 }
 
+// async function fetchThumbnailUrl(url) {
+//   try {
+//       console.log(`Fetching thumbnail for URL: ${url}`); // 디버깅 로그 추가
+//       const response = await fetch(url);
+      
+//       if (!response.ok) {
+//           throw new Error(`HTTP error! status: ${response.status}`);
+//       }
+
+//       const html = await response.text();
+//       const doc = new DOMParser().parseFromString(html, 'text/html');
+//       const metaTags = doc.getElementsByTagName('meta');
+      
+//       for (let meta of metaTags) {
+//           if (meta.getAttribute('property') === 'og:image' || meta.getAttribute('name') === 'twitter:image') {
+//               const thumbnailUrl = meta.getAttribute('content');
+//               console.log(`Found thumbnail URL: ${thumbnailUrl}`); // 디버깅 로그 추가
+//               return thumbnailUrl;
+//           }
+//       }
+//       console.warn('No thumbnail URL found in meta tags');
+//       return "thumbnail-div-box-1-img0.png"; // 기본 이미지 경로
+//   } catch (error) {
+//       console.error('썸네일 URL 추출 중 오류 발생:', error);
+//       return "thumbnail-div-box-1-img0.png"; // 기본 이미지 경로
+//   }
+// }
+
+// Set to keep track of processed URLs
+const processedUrls = new Set();
+
 async function fetchThumbnailUrl(url) {
   try {
-      console.log(`Fetching thumbnail for URL: ${url}`); // 디버깅 로그 추가
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-      }
+    // 이미 처리된 URL 확인
+    if (processedUrls.has(url)) {
+      console.log(`이미 처리된 URL: ${url}`);
+      return; // 이미 처리된 URL이면 종료
+    }
+    
+    // URL 처리
+    processedUrls.add(url);
 
-      const html = await response.text();
-      const doc = new DOMParser().parseFromString(html, 'text/html');
-      const metaTags = doc.getElementsByTagName('meta');
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const html = await response.text();
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    
+    const metaTags = doc.getElementsByTagName('meta');
+    
+    for (let meta of metaTags) {
+      const property = meta.getAttribute('property');
+      const name = meta.getAttribute('name');
       
-      for (let meta of metaTags) {
-          if (meta.getAttribute('property') === 'og:image' || meta.getAttribute('name') === 'twitter:image') {
-              const thumbnailUrl = meta.getAttribute('content');
-              console.log(`Found thumbnail URL: ${thumbnailUrl}`); // 디버깅 로그 추가
-              return thumbnailUrl;
-          }
+      if (property === 'og:image' || name === 'twitter:image') {
+        const thumbnailUrl = meta.getAttribute('content');
+        
+        if (thumbnailUrl) {
+          console.log(`Found thumbnail URL: ${thumbnailUrl}`);
+          return thumbnailUrl;
+        }
       }
-      console.warn('No thumbnail URL found in meta tags');
-      return "thumbnail-div-box-1-img0.png"; // 기본 이미지 경로
+    }
+
+    // 썸네일을 찾을 수 없으면 기본 이미지 사용
+    console.warn('No thumbnail URL found in meta tags.');
+    return "/path/to/default-thumbnail.png";  // 경로를 절대경로로 설정해야 할 수도 있습니다.
+
   } catch (error) {
-      console.error('썸네일 URL 추출 중 오류 발생:', error);
-      return "thumbnail-div-box-1-img0.png"; // 기본 이미지 경로
+    console.error('Error fetching thumbnail URL:', error);
+    return "/path/to/default-thumbnail.png";  // 경로를 절대경로로 설정해야 할 수도 있습니다.
   }
 }
+
 
 
 // 북마크 리스트 아이템 생성 함수 수정
@@ -311,6 +554,7 @@ async function createBookmarkListItem(bookmark) {
         tagBox.appendChild(tagButton);
     });
 
+
     addContextMenuForBookmark(thumbnailBox, bookmark, userEmail);
     return thumbnailBox;
 }
@@ -318,18 +562,24 @@ async function createBookmarkListItem(bookmark) {
 
 // 필터링된 북마크 표시 함수
 async function displayFilteredBookmarks(filteredBookmarks, tag) {
+
   searchResults.innerHTML = '';
-  searchSetting.innerHTML = `
-  <div style="
-  font-size: 18px; /* 폰트 크기 */
-  font-weight: bold; /* 볼드체 */
-  display: flex; /* Flexbox */
-  align-items: center; /* Flexbox 중앙 정렬 (수직) */
-  justify-content: center; /* Flexbox 중앙 정렬 (수평) */
-  margin-bottom:20px;
-  ">
-  태그로 검색된 결과 "${tag}"
-  </div>`;
+  searchSetting.style.flexDirection="row";
+  searchSetting.style.display="row";
+
+  searchbox3.style.flexDirection="column";
+
+//   searchText.innerHTML = `
+//   <div style="
+//   font-size: 18px; /* 폰트 크기 */
+//   font-weight: bold; /* 볼드체 */
+//   display: flex; /* Flexbox */
+//   align-items: center; /* Flexbox 중앙 정렬 (수직) */
+//   justify-content: center; /* Flexbox 중앙 정렬 (수평) */
+//   margin-bottom:20px;>
+//     태그로 검색된 결과 "${tag}"
+//   </div>
+// `;
 
   if (filteredBookmarks.length === 0) {
     searchSetting.innerHTML += `<div>해당 태그의 북마크가 없습니다.</div>`;
@@ -363,19 +613,21 @@ async function displayFilteredBookmarks(filteredBookmarks, tag) {
 }
 
 
-
     // 검색 결과 표시 함수
     async function displaySearchResults(tagResults, bookmarkResults, query) {
+
       const resultsContainer = document.getElementById('results');
 
       
       searchSetting.innerHTML = ''; // 기존 결과 초기화
       searchResults.innerHTML = ''; // 기존 결과 초기화
+      searchText.innerHTML='';
 
       if (tagResults.length === 0 && bookmarkResults.length === 0) {
         searchSetting.innerHTML = `<div>검색어 "${query}"에 대한 결과가 없습니다.</div>`;
           return;
       }
+
       
   
       // 북마크 이름 검색 결과 출력
@@ -386,16 +638,22 @@ async function displayFilteredBookmarks(filteredBookmarks, tag) {
           bookmarkHeader.style.fontSize= "18px"; /* 폰트 크기 */
           bookmarkHeader.style.fontWeight= "bold"; /* 볼드체 */
           bookmarkHeader.style.marginBottom="35px";
-          searchSetting.appendChild(bookmarkHeader);
+          searchText.appendChild(bookmarkHeader);
   
           for (const bookmark of bookmarkResults) {
               const bookmarkItem = await createBookmarkListItem(bookmark); // 비동기 함수 호출
               if (bookmarkItem instanceof Node) {
-                searchSetting.appendChild(bookmarkItem);
+                searchText.appendChild(bookmarkItem);
               } else {
                   console.error("Invalid Node returned from createBookmarkListItem:", bookmarkItem);
               }
           }
+
+          // const recBookmarksItem = await createBookmarkListItem(recBookmarks[0]); // 비동기 함수 호출
+          // recResults.appendChild(recBookmarksItem);
+
+
+          
       }
 
       // 태그 검색 결과 출력
@@ -407,7 +665,7 @@ async function displayFilteredBookmarks(filteredBookmarks, tag) {
         tagHeader.style.fontWeight= "bold"; /* 볼드체 */
         tagHeader.style.marginBottom="35px";
 
-        searchSetting.appendChild(tagHeader);
+        searchText.appendChild(tagHeader);
 
         for (const bookmark of tagResults) {
             const bookmarkItem = await createBookmarkListItem(bookmark); // 비동기 함수 호출
@@ -418,6 +676,7 @@ async function displayFilteredBookmarks(filteredBookmarks, tag) {
             }
         }
     }
+
 
       // 검색된 태그의 색 변경
       const tagButtons = document.querySelectorAll('.thumbnail-div-box-1-tagbox button'); 
@@ -431,19 +690,20 @@ async function displayFilteredBookmarks(filteredBookmarks, tag) {
           }
       });
 
+      await fetchRecommendedSites(query);
 
-        // 추천 사이트 표시
-        const recommendationsHTML = recommendedSites.map(site => {
-          const [title, url] = site.split('-'); // 'Title - URL' 형식으로 분리
-          return `<div><a href="${url.trim()}" target="_blank">${title.trim()}</a></div>`;
-        }).join('');
+        // // 추천 사이트 표시
+        // const recommendationsHTML = recommendedSites.map(site => {
+        //   const [title, url] = site.split('-'); // 'Title - URL' 형식으로 분리
+        //   return `<div><a href="${url.trim()}" target="_blank">${title.trim()}</a></div>`;
+        // }).join('');
 
-        resultsContainer.innerHTML += `
-          <div class="recommendations">
-              <h3>Recommended Sites</h3>
-              ${recommendationsHTML}
-          </div>
-        `;
+        // resultsContainer.innerHTML += `
+        //   <div class="recommendations">
+        //       <h3>Recommended Sites</h3>
+        //       ${recommendationsHTML}
+        //   </div>
+        // `;
   }
   
   
@@ -461,6 +721,8 @@ async function displayFilteredBookmarks(filteredBookmarks, tag) {
           searchResults.innerHTML = ''; // 기존 결과 초기화
   
           loadedbookmarks = bookmarks;
+          console.log("북마크들 형식",bookmarks)
+
   
           if (bookmarks.length === 0) {
               searchResults.innerHTML = 
@@ -473,6 +735,7 @@ async function displayFilteredBookmarks(filteredBookmarks, tag) {
               const listItem = await createBookmarkListItem(bookmark); // 비동기 함수 호출
               if (listItem instanceof Node) {
                   searchResults.appendChild(listItem);
+                  console.log("북마크 형식",bookmark)
               } else {
                   console.error("Invalid Node returned from createBookmarkListItem:", listItem);
               }
