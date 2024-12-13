@@ -3,15 +3,32 @@
   "name": "Bookmark Manager",
   "version": "1.0",
   "description": "Save and view your bookmarks.",
-  "permissions": ["storage", "activeTab"],
+  "permissions": ["storage", "activeTab", "identity"],
+  "oauth2": {
+    "client_id": "228124254280-evoreqge20hcd58okm0ptbje1i160u4p.apps.googleusercontent.com",
+    "scopes": ["profile", "email"]
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
   "action": {
-    "default_popup": "bookmark_check/bookmark_check.html",
+    "default_popup": "auth.html",
     "default_icon": {
       "16": "icon16.png"
     }
   },
   "icons": {
     "16": "icon16.png"
+<<<<<<< HEAD
   }
+=======
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["auth.js"]
+    }
+  ]
+>>>>>>> 7c82287a6fcfdc2d81f43e23eefd7fe634a23975
 }
 
