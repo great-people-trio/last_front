@@ -19,9 +19,6 @@
   },
   "icons": {
     "16": "icon16.png"
-<<<<<<< HEAD
-  }
-=======
   },
   "content_scripts": [
     {
@@ -29,6 +26,5 @@
       "js": ["auth.js"]
     }
   ]
->>>>>>> 7c82287a6fcfdc2d81f43e23eefd7fe634a23975
 }
 
